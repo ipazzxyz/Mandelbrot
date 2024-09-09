@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.30)
+project(Mandelbrot)
+set (CMAKE_CXX_STANDARD 23)
+find_package(SFML 2.6 COMPONENTS graphics REQUIRED)
+add_executable(Mandelbrot src/main.cpp src/app.cpp src/app.hpp src/complex.cpp src/complex.hpp)
+target_link_libraries(Mandelbrot sfml-graphics)
