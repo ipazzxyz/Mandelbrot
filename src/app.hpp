@@ -10,7 +10,6 @@ class App {
  private:
   static constexpr int window_height_ = 1440, window_width_ = 810, n_ = 100;
 
-  const sf::Vector2f window_size_;
   sf::RenderWindow window_;
   std::stack<sf::RectangleShape> views_;
   bool selecting_ = false, accurate_ = true;
