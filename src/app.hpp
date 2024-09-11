@@ -6,17 +6,20 @@
 class App {
  public:
   App();
+  App(int, double, double);
+
+  static constexpr int window_height = 1440, window_width = 810, n = 100;
 
  private:
-  static constexpr int window_height_ = 1440, window_width_ = 810, n_ = 100;
-
   sf::RenderWindow window_;
   std::stack<sf::RectangleShape> views_;
-  bool selecting_ = false, accurate_ = true;
+  bool selecting_, accurate_, mandelbrot_;
   sf::RectangleShape selection_;
   sf::Texture texture_;
   sf::Sprite fractal_;
   sf::Image img_;
+  int p_;
+  double a_, b_;
 
   void Setup();
   void Run();
@@ -32,5 +35,5 @@ class App {
   void CalculateView();
   void CalculateFractal();
   void CalculateSelection();
-  float Check(const double& x, const double& y);
+  virtual float Check(const double& x, const double& y);
 };

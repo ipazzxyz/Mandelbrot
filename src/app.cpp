@@ -4,13 +4,34 @@
 
 #include "complex.hpp"
 
+Complex pow(Complex x, int n) {
+  Complex res(x);
+  for (int i = 1; i < n; ++i) {
+    res *= x;
+  }
+  return res;
+}
+
 App::App()
-    : window_(sf::VideoMode(window_height_, window_width_), "Mandelbrot",
-              sf::Style::None) {
+    : window_(sf::VideoMode(window_height, window_width), "Mandelbrot",
+              sf::Style::None),
+      mandelbrot_(true) {
+  Setup();
+  Run();
+}
+App::App(int p, double a, double b)
+    : window_(sf::VideoMode(window_height, window_width), "Julia",
+              sf::Style::None),
+      mandelbrot_(false),
+      p_(p),
+      a_(a),
+      b_(b) {
   Setup();
   Run();
 }
 void App::Setup() {
+  accurate_ = true;
+  selecting_ = false;
   views_.emplace(sf::Vector2f(8, 4.5));
   views_.top().setPosition(-4, -2.25);
   selection_.setFillColor(sf::Color(0, 0, 255, 100));
@@ -18,7 +39,8 @@ void App::Setup() {
   selection_.setOutlineColor(sf::Color(0, 0, 255));
   CalculateFractal();
   std::cout << "Keybinds:\nSpace - previos view\nBackSpace - reset "
-               "view\nEscape - close";
+               "view\nEscape - close"
+            << std::endl;
 }
 void App::Run() {
   Render();
@@ -114,17 +136,16 @@ void App::Render() {
   window_.display();
 }
 void App::CalculateFractal() {
-  img_.create(window_height_, window_width_);
-  for (int x = 0; x < window_height_; ++x) {
-    for (int y = 0; y < window_width_; ++y) {
-      float res = Check(views_.top().getPosition().x +
-                            x / static_cast<double>(window_height_) *
-                                views_.top().getSize().x,
-                        views_.top().getPosition().y +
-                            y / static_cast<double>(window_width_) *
-                                views_.top().getSize().y);
+  img_.create(window_height, window_width);
+  for (int x = 0; x < window_height; ++x) {
+    for (int y = 0; y < window_width; ++y) {
+      float res = Check(
+          views_.top().getPosition().x +
+              x / static_cast<double>(window_height) * views_.top().getSize().x,
+          views_.top().getPosition().y +
+              y / static_cast<double>(window_width) * views_.top().getSize().y);
       if (res > 0) {
-        img_.setPixel(x, y, sf::Color(255, 0, 255, res * 255));
+        img_.setPixel(x, y, sf::Color(255, 0, 255, (1 + res) / 2. * 255));
       }
     }
   }
@@ -135,18 +156,19 @@ void App::CalculateFractal() {
 }
 void App::CalculateView() {
   sf::RectangleShape new_view(
-      sf::Vector2f(selection_.getSize().x / static_cast<float>(window_height_) *
+      sf::Vector2f(selection_.getSize().x / static_cast<float>(window_height) *
                        views_.top().getSize().x,
-                   selection_.getSize().y / static_cast<float>(window_width_) *
+                   selection_.getSize().y / static_cast<float>(window_width) *
                        views_.top().getSize().y));
   new_view.setPosition(sf::Vector2f(selection_.getPosition().x /
-                                        static_cast<float>(window_height_) *
+                                        static_cast<float>(window_height) *
                                         views_.top().getSize().x,
                                     selection_.getPosition().y /
-                                        static_cast<float>(window_width_) *
+                                        static_cast<float>(window_width) *
                                         views_.top().getSize().y) +
                        views_.top().getPosition());
-  if (new_view.getSize().x < 1e-8 || new_view.getSize().y < 1e-8) {
+  if (std::abs(new_view.getSize().x) < 1e-8 ||
+      std::abs(new_view.getSize().y) < 1e-8) {
     return;
   }
   views_.push(new_view);
@@ -165,11 +187,21 @@ void App::CalculateSelection() {
                                   mouse.y - selection_.getPosition().y));
 }
 float App::Check(const double& x, const double& y) {
-  Complex z, c(x, y);
-  for (int i = 1; i <= n_; ++i) {
-    z = z * z + c;
+  if (mandelbrot_) {
+    Complex z, c(x, y);
+    for (int i = 1; i <= n; ++i) {
+      z = z * z + c;
+      if (z.a * z.a + z.b * z.b > 4) {
+        return i / static_cast<float>(n);
+      }
+    }
+    return 0;
+  }
+  Complex z(x, y), c(a_, b_);
+  for (int i = 1; i <= n; ++i) {
+    z = pow(z, p_) + c;
     if (z.a * z.a + z.b * z.b > 4) {
-      return i / static_cast<float>(n_);
+      return i / static_cast<float>(n);
     }
   }
   return 0;
